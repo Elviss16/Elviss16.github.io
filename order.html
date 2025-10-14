@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 4: Ordering Page</title>
+    <style>
+        body {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #60a5fa;
+        }
+
+        .box {
+            background-color: #0f172a;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px auto;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        p span {
+            color: #a5b4fc;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+            button:hover {
+                background-color: #3b82f6;
+            }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="lab1.html">Lab 1</a>
+        <a href="lab2.html">Lab 2</a>
+        <a href="lab3.html">Lab 3</a>
+        <a href="order.html">Lab 4</a>
+    </nav>
+    <hr>
+
+    <h1>Welcome to the best soocer jersey store!</h1>
+    <div class="box">
+        <h2 id="greeting">Hello, customer!</h2>
+        <p><span>Name:</span> <span id="name">-</span></p>
+        <p><span>Item:</span> <span id="item">-</span></p>
+        <p><span>Quantity:</span> <span id="qty">-</span></p>
+        <p><span>Order Date:</span> <span id="orderDate">-</span></p>
+        <p><span>Expected Arrival:</span> <span id="arrival">-</span></p>
+        <p id="thanks"></p>
+        <button onclick="startOrder()">Place Another Order</button>
+    </div>
+
+    <script>
+        
+        alert("Welcome to the best soocer jersey store!");
+
+        
+        function startOrder() {
+            
+            let customer = prompt("Enter your name:");
+            if (!customer) return alert("Order cancelled.");
+
+            let item = prompt("What jersey would you like to order?");
+            if (!item) return alert("Order cancelled.");
+
+            let quantity = prompt("How many jerseys would you like? (1-99)");
+            if (!quantity || isNaN(quantity) || quantity < 1 || quantity > 99) {
+                return alert("Please enter a number between 1 and 99 next time!");
+            }
+
+            
+            const hour = new Date().getHours();
+            let timeMsg;
+            if (hour < 12) timeMsg = "Good Morning";
+            else if (hour < 18) timeMsg = "Good Afternoon";
+            else timeMsg = "Good Evening";
+
+            
+            const today = new Date();
+            const arrival = new Date(today);
+            arrival.setDate(today.getDate() + 7);
+
+            
+            document.getElementById("greeting").textContent =
+                `${timeMsg}, ${customer}! Thank you for ordering.`;
+            document.getElementById("name").textContent = customer;
+            document.getElementById("item").textContent = item;
+            document.getElementById("qty").textContent = quantity;
+            document.getElementById("orderDate").textContent = today.toDateString();
+            document.getElementById("arrival").textContent = arrival.toDateString();
+            document.getElementById("thanks").textContent =
+                "Your order has been received successfully!";
+        }
+
+        
+        startOrder();
+    </script>
+</body>
+</html>
