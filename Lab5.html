@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<div class="brand">
+    <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2 L34 8 V18 C34 28 27 34 20 38 C13 34 6 28 6 18 V8 L20 2 Z" fill="#22c55e" stroke="#3b82f6" stroke-width="2" />
+        <circle cx="20" cy="17" r="6" fill="#0b1b2b" stroke="#eab308" stroke-width="2" />
+        <path d="M16 15 H24 V19 H16 Z" fill="#eab308" />
+    </svg>
+    <h1>UltraJersey FC</h1>
+</div>
+
+
+<p class="tiny mb-3">Create an account to save your favourite club kits, track drops, and get early access to limited releases.</p>
+
+
+<form id="regForm" novalidate>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="firstName" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="firstName" required />
+        </div>
+        <div class="col-md-6">
+            <label for="lastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="lastName" required />
+        </div>
+        <div class="col-12">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="email" placeholder="you@example.com" required />
+        </div>
+        <div class="col-12">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" required />
+            <div class="form-text">Password must include at least one of these: <b>!</b> or <b>?</b></div>
+        </div>
+        <div class="col-12">
+            <label for="dob" class="form-label">Date of Birth</label>
+            <input type="date" class="form-control" id="dob" required />
+        </div>
+    </div>
+
+
+    <button type="submit" class="btn btn-success w-100 mt-3">Join UltraJersey</button>
+</form>
+
+
+<div id="resultBox" class="result-box"></div>
+<p class="tiny mt-3">By signing up you agree to receive occasional store updates about new jerseys and restocks. You can unsubscribe any time.</p>
+</div>
+</div>
+
+
+<script>const form = document.getElementById('regForm');
+const box = document.getElementById('resultBox');
+
+
+form.addEventListener('submit', function(ev){
+ev.preventDefault();
+
+
+const first = document.getElementById('firstName').value.trim();
+const last = document.getElementById('lastName').value.trim();
+const email = document.getElementById('email').value.trim();
+const pass = document.getElementById('password').value.trim();
+const dob = document.getElementById('dob').value;
+
+
+if(!first || !last || !email || !pass || !dob){
+return show(`? Please fill out every field before continuing.`);
+}
+
+
+if(!(pass.includes('!') || pass.includes('?'))){
+return show(`?? Password needs at least one special character: <b>!</b> or <b>?</b>.`);
+}
+
+
+const shopper = {
+firstName: first,
+lastName: last,
+email: email,
+password: pass,
+dob: dob
+};
+
+
+const hidden = '*'.repeat(shopper.password.length);
+
+
+show(
+`? <b>Registration successful</b> — welcome to UltraJersey FC!<br/><br/>` +
+`<strong>Name:</strong> ${shopper.firstName} ${shopper.lastName}<br/>` +
+`<strong>Email:</strong> ${shopper.email}<br/>` +
+`<strong>Password:</strong> ${hidden}<br/>` +
+`<strong>Date of Birth:</strong> ${shopper.dob}<br/>` +
+`<hr class="my-2"/>` +
+`<span class="tiny">Tip: add your favourite club kits to your wishlist after logging in.</span>`
+);
+});
+
+
+function show(html){
+box.style.display = 'block';
+box.innerHTML = html;
+}</script>
+</body>
+</html>
