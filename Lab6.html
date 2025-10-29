@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSC 225 • Lab 6 • Consuming a REST API</title>
+    <style>
+            :root {
+                --ink: #1c1f24; 
+                --paper: #f5f6f8; 
+                --accent: #3b7ddd; 
+                --muted: #6b7280; 
+                --line: #e6e8eb; 
+            }
+
+            html, body {
+                height: 100%
+            }
+
+            body {
+                margin: 0;
+                font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+                background: var(--paper);
+                color: var(--ink);
+                display: grid;
+                place-items: start center;
+                padding: 28px;
+            }
+
+            .wrap {
+                width: min(900px, 92vw)
+            }
+
+            header {
+                margin: 0 0 18px
+            }
+
+            h1 {
+                font-size: clamp(22px, 3.2vw, 30px);
+                margin: 0 0 6px
+            }
+
+            .sub {
+                color: var(--muted);
+                font-size: 14px
+            }
+
+            .card {
+                background: #fff;
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                box-shadow: 0 1px 8px rgba(22,25,30,.04);
+                padding: 18px 18px 14px;
+            }
+
+            .actions {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin: 8px 0 16px
+            }
+
+            button {
+                appearance: none;
+                border: 1px solid var(--accent);
+                background: var(--accent);
+                color: #fff;
+                cursor: pointer;
+                padding: 10px 14px;
+                border-radius: 10px;
+                font-weight: 600;
+                letter-spacing: .2px;
+            }
+
+                button:disabled {
+                    opacity: .6;
+                    cursor: not-allowed
+                }
+
+                button.secondary {
+                    background: #fff;
+                    color: var(--accent)
+                }
+
+                button:focus-visible {
+                    outline: 3px solid color-mix(in oklab, var(--accent) 60%, white)
+                }
+
+            figure {
+                margin: 0;
+                display: flex;
+                gap: 14px;
+                align-items: center
+            }
+
+                figure img {
+                    width: 160px;
+                    height: 160px;
+                    object-fit: cover;
+                    border-radius: 12px;
+                    border: 1px solid var(--line)
+                }
+
+            figcaption {
+                font-size: 14px;
+                color: var(--muted)
+            }
+
+            table {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                overflow: hidden
+            }
+
+            thead th {
+                background: #0f172a;
+                color: #fff;
+                font-weight: 700;
+                text-align: left;
+                padding: 10px 12px;
+                font-size: 14px
+            }
+
+            tbody td {
+                padding: 10px 12px;
+                border-top: 1px solid var(--line);
+                vertical-align: top
+            }
+
+            tbody tr:nth-child(odd) td {
+                background: #fafbfd
+            }
+
+            caption {
+                caption-side: bottom;
+                padding-top: 6px;
+                color: var(--muted);
+                font-size: 13px
+            }
+
+            .note {
+                color: var(--muted);
+                font-size: 13px
+            }
+
+            .sr-only {
+                position: absolute !important;
+                clip: rect(1px,1px,1px,1px);
+                padding: 0;
+                border: 0;
+                height: 1px;
+                width: 1px;
+                overflow: hidden
+            }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>CSC 225 – Lab 6: Consuming a REST API</h1>
+            <div class="sub">Vanilla JS • GET request • Sort by <code>factid</code> • Update an image from the API</div>
+        </header>
+
+        <section class="card" aria-labelledby="controls-h">
+            <h2 id="controls-h" class="sr-only">Controls</h2>
+            <div class="actions">
+                <button id="loadBtn" type="button">Load cat facts</button>
+                <button id="clearBtn" class="secondary" type="button" title="Clear the table">Clear</button>
+                <span id="status" class="note" role="status" aria-live="polite"></span>
+            </div>
+            <figure>
+                <img id="catPic" src="https://placekitten.com/320/320" alt="A cat photo that will be replaced by the API picture" />
+                <figcaption id="picCaption" class="note">This picture will update after the fetch using the first image URL found in the API response.</figcaption>
+            </figure>
+        </section>
+
+        <section class="card" aria-labelledby="table-h" style="margin-top:14px">
+            <h2 id="table-h" style="margin:0 0 10px">Facts</h2>
+            <table id="factsTable">
+                <thead>
+                    <tr>
+                        <th scope="col">factid</th>
+                        <th scope="col">fact</th>
+                    </tr>
+                </thead>
+                <tbody id="factsBody">
+                </tbody>
+                <caption>Data source: <span class="note">https://brianobruno.github.io/cats.json</span></caption>
+            </table>
+        </section>
+
+        <p class="note" style="margin-top:10px">Tip: commit this file as <code>index.html</code> to your repo and enable GitHub Pages (Settings ? Pages ? Deploy from branch).</p>
+    </div>
+
+    <script>
+    const coalesce = (...xs) => xs.find(v => v !== undefined && v !== null && String(v).trim() !== "");
+
+    const els = {
+      loadBtn: document.getElementById('loadBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      body: document.getElementById('factsBody'),
+      table: document.getElementById('factsTable'),
+      pic: document.getElementById('catPic'),
+      picCaption: document.getElementById('picCaption'),
+      status: document.getElementById('status')
+    };
+
+    function setStatus(msg){ els.status.textContent = msg || ''; }
+
+    function renderRows(items){
+      els.body.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      items.forEach(row => {
+        const tr = document.createElement('tr');
+        const tdId = document.createElement('td');
+        const tdFact = document.createElement('td');
+        tdId.textContent = row.factid;
+        tdFact.textContent = row.fact;
+        tr.append(tdId, tdFact);
+        frag.append(tr);
+      });
+      els.body.append(frag);
+    }
+
+    function updatePictureFrom(items){
+      for(const it of items){
+        const url = coalesce(it.image, it.img, it.photo, it.picture, it.pic, it.url, it.link);
+        if(typeof url === 'string' && /https?:\/\//i.test(url)){
+          els.pic.src = url;
+          els.picCaption.textContent = 'Updated from API: ' + url;
+          return;
+        }
+      }
+      els.picCaption.textContent = 'No picture URL was present in the JSON, so the placeholder remains.';
+    }
+
+    async function fetchCats(){
+      const endpoints = [
+      'https://brianobruno.github.io/cats.json',
+      'https://raw.githubusercontent.com/brianobruno/brianobruno.github.io/main/cats.json',
+      'https://raw.githubusercontent.com/brianobruno/brianobruno.github.io/master/cats.json'
+    ];
+
+    async function fetchCats(){
+      setStatus('Fetching…');
+      els.loadBtn.disabled = true;
+      let lastErr = null;
+      try{
+        let data = null, usedEndpoint = null;
+        for(const url of endpoints){
+          try{
+            const resp = await fetch(url, {cache:'no-store', mode:'cors'});
+            if(!resp.ok) throw new Error('HTTP ' + resp.status + ' @ ' + url);
+            const text = await resp.text();
+            try{
+              data = JSON.parse(text);
+              usedEndpoint = url;
+              break; 
+            }catch(parseErr){
+              throw new Error('Non-JSON response @ ' + url);
+            }
+          }catch(err){
+            lastErr = err;
+          }
+        }
+        if(!data){
+          throw lastErr || new Error('No response from endpoints');
+        }
+
+        
+        let items = Array.isArray(data) ? data : (Array.isArray(data.cats) ? data.cats : []);
+
+        
+        items = items.map(raw => ({
+          ...raw,
+          factid: Number(coalesce(raw.factid, raw.id, raw.factId, raw.factID, raw.index)),
+          fact: String(coalesce(raw.fact, raw.text, raw.message, raw.caption, ''))
+        }))
+        .filter(x => Number.isFinite(x.factid) && x.fact !== '')
+        .sort((a,b) => a.factid - b.factid);
+
+        if(items.length === 0){
+          setStatus('Fetched from ' + usedEndpoint + ' but found 0 usable rows.');
+        } else {
+          setStatus('Loaded ' + items.length + ' item' + (items.length===1?'':'s') + ' from ' + usedEndpoint);
+        }
+
+        renderRows(items);
+        updatePictureFrom(items);
+      }catch(err){
+        console.error(err);
+        setStatus('Could not load data. ' + (err && err.message ? err.message : ''));
+      }finally{
+        els.loadBtn.disabled = false;
+      }
+    }
+    }
+
+    els.loadBtn.addEventListener('click', fetchCats);
+    els.clearBtn.addEventListener('click', () => {
+      els.body.innerHTML = '';
+      setStatus('Cleared.');
+    });
+    </script>
+</body>
+</html>
