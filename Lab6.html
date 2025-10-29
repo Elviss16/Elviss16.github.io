@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSC 225 • Lab 6 • Consuming a REST API</title>
+    <style>
+        :root {
+            --ink: #1c1f24;
+            --paper: #f5f6f8;
+            --accent: #3b7ddd;
+            --muted: #6b7280;
+            --line: #e6e8eb;
+        }
+
+        html, body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font: 16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+            background: var(--paper);
+            color: var(--ink);
+            display: grid;
+            place-items: start center;
+            padding: 28px;
+        }
+
+        .wrap {
+            width: min(900px, 92vw)
+        }
+
+        header {
+            margin: 0 0 18px
+        }
+
+        h1 {
+            font-size: clamp(22px, 3.2vw, 30px);
+            margin: 0 0 6px
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 1px 8px rgba(22,25,30,.04);
+            padding: 18px 18px 14px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 8px 0 16px
+        }
+
+        button {
+            appearance: none;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: .2px;
+        }
+
+            button:disabled {
+                opacity: .6;
+                cursor: not-allowed
+            }
+
+        figure {
+            margin: 0;
+            display: flex;
+            gap: 14px;
+            align-items: center
+        }
+
+            figure img {
+                width: 200px;
+                height: 200px;
+                object-fit: cover;
+                border-radius: 12px;
+                border: 1px solid var(--line)
+            }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+        thead th {
+            background: #0f172a;
+            color: #fff;
+            font-weight: 700;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 14px
+        }
+
+        tbody td {
+            padding: 10px 12px;
+            border-top: 1px solid var(--line);
+            vertical-align: top
+        }
+
+        tbody tr:nth-child(odd) td {
+            background: #fafbfd
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>CSC 225 – Lab 6: Consuming a REST API</h1>
+        </header>
+
+        <section class="card">
+            <div class="actions">
+                <button id="loadBtn" type="button">Load cat facts</button>
+            </div>
+            <figure>
+                <img id="catPic" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/1200px-Cat_August_2010-4.jpg" alt="Cat image" />
+            </figure>
+        </section>
+
+        <section class="card" style="margin-top:14px">
+            <h2>Facts</h2>
+            <table id="factsTable">
+                <thead>
+                    <tr><th>factid</th><th>fact</th></tr>
+                </thead>
+                <tbody id="factsBody"></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+    const els = {
+      loadBtn: document.getElementById('loadBtn'),
+      body: document.getElementById('factsBody'),
+      pic: document.getElementById('catPic')
+    };
+
+    const API_URL = 'https://brianobruno.github.io/cats.json';
+
+    function renderRows(items){
+      els.body.innerHTML = '';
+      const sorted = [...items].sort((a,b) => a.factid - b.factid);
+      sorted.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.factid}</td><td>${r.fact}</td>`;
+        els.body.append(tr);
+      });
+    }
+
+    async function fetchCats(){
+      try {
+        const resp = await fetch(API_URL);
+        const data = await resp.json();
+        const facts = Array.isArray(data.facts) ? data.facts : [];
+        const items = facts.map(f => ({ factid: Number(f.factId), fact: String(f.text) }))
+                           .filter(x => Number.isFinite(x.factid) && x.fact);
+        renderRows(items);
+        if(typeof data.catPhoto === 'string' && /^https?:\/\//i.test(data.catPhoto)){
+          els.pic.src = data.catPhoto;
+        }
+      } catch (e) {
+        console.error('Fetch failed', e);
+      }
+    }
+
+    els.loadBtn.addEventListener('click', fetchCats);
+    </script>
+</body>
+</html>
