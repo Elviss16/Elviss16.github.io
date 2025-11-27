@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Driver Telemetry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0b0b0b;
+            color: #e5e5e5;
+        }
+
+        nav.navbar {
+            background-color: #000000;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            transition: 0.15s ease-in-out;
+        }
+
+        table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">OpenF1 Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="mainNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="telemetry.html">Telemetry</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">About / Docs</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-4">
+
+        <div id="noDriverMsg" class="alert alert-warning d-none">
+            No driver was selected. Go back to the <a href="index.html" class="alert-link">home page</a>
+            and pick one.
+        </div>
+
+        <section id="driverSection" class="mb-4 d-none">
+            <h2 id="driverName" class="text-warning fw-bold"></h2>
+            <p class="mb-1"><strong>Team:</strong> <span id="driverTeam"></span></p>
+            <p class="mb-1"><strong>Country:</strong> <span id="driverCountry"></span></p>
+            <p class="mb-1"><strong>Number:</strong> <span id="driverNumber"></span></p>
+            <p class="text-secondary small mb-0">
+                Driver info loaded from the <code>/drivers</code> endpoint.
+            </p>
+        </section>
+
+        <section id="telemetrySection" class="d-none">
+            <h3 class="mt-4">Sample Telemetry (session 9159)</h3>
+            <p class="text-secondary">
+                Data below is fetched from the <code>/car_data</code> endpoint for a sample race
+                session.
+            </p>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-sm align-middle">
+                    <thead class="table-dark text-danger fw-bold">
+                        <tr>
+                            <th>Time (UTC)</th>
+                            <th>Speed (km/h)</th>
+                            <th>RPM</th>
+                            <th>Gear</th>
+                            <th>Throttle %</th>
+                            <th>DRS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="telemetryBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <p id="telemetryError" class="mt-3 text-danger fw-semibold"></p>
+
+    </main>
+
+    <footer class="text-center py-3 border-top border-secondary">
+        <small>
+            <span class="text-warning fw-bold">Built by Elvis Peca</span>
+            &nbsp; | &nbsp;
+            <span class="text-warning fw-bold">Web Dev Final Project</span>
+            &nbsp; | &nbsp;
+            <a href="https://openf1.org" target="_blank" class="text-danger fw-bold text-decoration-none">
+                Data from openf1.org
+            </a>
+        </small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    <script>
+        const urlStuff = new URLSearchParams(window.location.search);
+        const num = urlStuff.get('driver');
+
+        const msgNoDriver = document.getElementById('noDriverMsg');
+        const infoBox = document.getElementById('driverSection');
+        const tSection = document.getElementById('telemetrySection');
+        const tBody = document.getElementById('telemetryBody');
+        const tError = document.getElementById('telemetryError');
+
+        // if user typed telemetry.html without picking a driver first
+        if (!num) {
+            msgNoDriver.classList.remove('d-none');
+        } else {
+            fetch('https://api.openf1.org/v1/drivers?driver_number=' + num)
+                .then(r => r.json())
+                .then(list => {
+                    const d = list[0];
+                    if (!d) {
+                        msgNoDriver.classList.remove('d-none');
+                        return;
+                    }
+
+                    document.getElementById('driverName').textContent = d.full_name;
+                    document.getElementById('driverTeam').textContent = d.team_name || '?';
+                    document.getElementById('driverCountry').textContent = d.country_code || '?';
+                    document.getElementById('driverNumber').textContent = d.driver_number;
+
+                    infoBox.classList.remove('d-none');
+                })
+                .catch(err => {
+                    console.log('Driver fetch problem:', err);
+                    tError.textContent = 'Couldn’t load driver info – maybe the internet glitched.';
+                });
+
+            // 9159 is a random session key I found from their docs. Not every driver has data for it.
+            const telUrl = 'https://api.openf1.org/v1/car_data?driver_number=' + num + '&session_key=9159';
+
+            fetch(telUrl)
+                .then(r => r.json())
+                .then(rows => {
+                    if (!rows || !Array.isArray(rows)) {
+                        tError.textContent = 'Telemetry came back in a weird format.';
+                        return;
+                    }
+
+                    const active = rows.filter(item => item.speed && item.speed > 150);
+
+                    if (active.length === 0) {
+                        tError.textContent = 'Didn’t find any fast laps for this driver in session 9159.';
+                        return;
+                    }
+
+                    active.slice(0, 20).forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                                <td>${item.date}</td>
+                                <td>${item.speed}</td>
+                                <td>${item.rpm || '-'}</td>
+                                <td>${item.n_gear || '-'}</td>
+                                <td>${item.throttle || '-'}</td>
+                                <td>${item.drs || '-'}</td>
+                            `;
+                        tBody.appendChild(tr);
+                    });
+
+                    tSection.classList.remove('d-none');
+                })
+                .catch(err => {
+                    console.log('Telemetry fetch problem:', err);
+                    tError.textContent = 'Telemetry didn’t load. I usually just refresh the page.';
+                });
+        }
+    </script>
+
+</body>
+</html>
