@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About / API Docs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0b0b0b;
+            color: #e5e5e5;
+        }
+
+        nav.navbar {
+            background-color: #000000;
+        }
+
+        h1, h2, h3 {
+            color: #ffc107;
+        }
+
+        code {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="./Project.html">OpenF1 Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="mainNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="./Project.html">Home</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="./telemetry.html">Telemetry</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./about.html">About / Docs</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+    <main class="container my-4">
+        <header class="mb-4 text-center">
+            <h1 class="fw-bold">Final Project Web Development</h1>
+            <p class="text-secondary mb-0">
+                REST API integration using HTML, Bootstrap, and vanilla JavaScript.
+            </p>
+        </header>
+
+        <section class="mb-4">
+            <h2>Overview</h2>
+            <p>
+                This project is a small Formula 1 dashboard that connects to the
+                <strong>OpenF1</strong> REST API. It shows a sample list of drivers and
+                basic telemetry (speed, RPM, gear, etc.) for a selected driver.
+                Everything is built with plain HTML, Bootstrap for styling, and
+                JavaScript's <code>fetch()</code> for API calls.
+            </p>
+        </section>
+
+        <section class="mb-4">
+            <h2>API Used</h2>
+            <ul>
+                <li><strong>Name:</strong> OpenF1</li>
+                <li><strong>Base URL:</strong> <code>https://api.openf1.org/v1</code></li>
+                <li><strong>Authentication:</strong> No API key required</li>
+                <li><strong>Response format:</strong> JSON</li>
+            </ul>
+            <p class="text-secondary small">
+                Note: Calling the base URL by itself will return a JSON error saying
+                the route is invalid. The API requires a valid endpoint such as
+                <code>/drivers</code> or <code>/car_data</code>.
+            </p>
+        </section>
+
+        <section class="mb-4">
+            <h2>Endpoints Used in This App</h2>
+            <h3 class="h5 mt-3">1. <code>/drivers</code></h3>
+            <p>
+                Used on the home page and telemetry page to load driver information
+                (full name, country code, team name, and car number).
+            </p>
+            <p><strong>Example request:</strong></p>
+            <code>https://api.openf1.org/v1/drivers?driver_number=16</code>
+
+            <h3 class="h5 mt-4">2. <code>/car_data</code></h3>
+            <p>
+                Used on the telemetry page to load basic telemetry for a selected
+                driver in a sample session.
+            </p>
+            <p><strong>Example request:</strong></p>
+            <code>https://api.openf1.org/v1/car_data?driver_number=16&amp;session_key=9159</code>
+        </section>
+
+        <section class="mb-4">
+            <h2>How the Application Works</h2>
+            <ul>
+                <li>
+                    On <strong>index.html</strong>, JavaScript calls
+                    <code>/drivers</code> and creates Bootstrap cards for a sample of
+                    drivers. Each card is colored using a simple team-color mapping.
+                </li>
+                <li>
+                    When the user clicks <strong>View Telemetry</strong>,
+                    they are sent to <code>telemetry.html?driver=XX</code>.
+                </li>
+                <li>
+                    On <strong>telemetry.html</strong>, the app reads the driver
+                    number from the URL and:
+                    <ul>
+                        <li>calls <code>/drivers?driver_number=XX</code> to show the driver info;</li>
+                        <li>
+                            calls <code>/car_data?driver_number=XX&amp;session_key=9159</code>
+                            and filters for rows where speed is higher than 150 km/h.
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    If the API does not return any high-speed data for that driver,
+                    the page shows a friendly error message instead of an empty table.
+                </li>
+            </ul>
+        </section>
+
+        <section class="mb-4">
+            <h2>Libraries / Tools</h2>
+            <ul>
+                <li>Bootstrap for layout and styling</li>
+                <li>Vanilla JavaScript <code>fetch()</code> for making REST calls</li>
+                <li>GitHub Pages for hosting (project will be deployed there)</li>
+            </ul>
+        </section>
+
+        <section class="mb-4">
+            <h2>Future Improvements</h2>
+            <ul>
+                <li>Add a dropdown to choose a session (practice, qualifying, race).</li>
+                <li>Update the rooster and add more drivers and new teams.</li>
+                <li>Plot speed vs time using a chart library instead of just a table.</li>
+                <li>Compare two drivers side by side on the telemetry page.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 border-top border-secondary">
+        <small>
+            <span class="text-warning fw-bold">Built by Elvis Peca</span>
+            &nbsp; | &nbsp;
+            <span class="text-warning fw-bold">Web Dev Final Project</span>
+            &nbsp; | &nbsp;
+            <a href="https://openf1.org" target="_blank" class="text-danger fw-bold text-decoration-none">
+                Data from openf1.org
+            </a>
+        </small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
