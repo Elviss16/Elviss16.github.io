@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenF1 Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0b0b0b;
+            color: #e5e5e5;
+        }
+
+        nav.navbar {
+            background-color: #000000;
+        }
+
+        header {
+            background: linear-gradient(to right, #3a3a3a, #111111);
+        }
+
+        .card-team {
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+        }
+
+            .card-team .card-body {
+                min-height: 150px;
+            }
+
+        .btn:hover {
+            transform: scale(1.03);
+            transition: 0.15s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="./index.html">OpenF1 Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="mainNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="./index.html">Home</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="./telemetry.html">Telemetry</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./about.html">About / Docs</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+    <header class="py-5 mb-4">
+        <div class="container">
+            <h1 class="display-5 fw-bold text-warning">Formula 1 Data Viewer</h1>
+            <p class="lead mb-0">
+                Small web app that uses the OpenF1 REST API to show each driver's info and basic telemetry.
+            </p>
+        </div>
+    </header>
+
+    <main class="container mb-5">
+
+        <h2 class="mb-2">Drivers (sample)</h2>
+        <p class="text-danger fw-bold">
+            This list is loaded from the <code>/drivers</code> endpoint.
+            Clicking the <strong>View Telemetry</strong> button will open the telemetry page for that driver.
+        </p>
+        <p class="text-secondary fst-italic mb-4">
+            I only pull a handful of drivers here so the page doesnt get ridiculously long xD.
+        </p>
+
+        <div id="driverRow" class="row g-3">
+        </div>
+
+        <div id="driverError" class="mt-3 text-danger fw-semibold"></div>
+
+    </main>
+
+    <footer class="text-center py-3 border-top border-secondary">
+        <small>
+            <span class="text-warning fw-bold">Built by Elvis Peca</span>
+            &nbsp; | &nbsp;
+            <span class="text-warning fw-bold">Web Dev Final Project</span>
+            &nbsp; | &nbsp;
+            <a href="https://openf1.org" target="_blank" class="text-danger fw-bold text-decoration-none">
+                Data from openf1.org
+            </a>
+        </small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const driverRow = document.getElementById('driverRow');
+        const driverError = document.getElementById('driverError');
+
+        function getTeamColor(team) {
+            const colors = {
+                "Ferrari": "#dc0000",
+                "Red Bull Racing": "#001f3f",
+                "McLaren": "#ff8700",
+                "Aston Martin": "#006f62",
+                "Williams": "#005aff",
+                "Alpine": "#0072ff",
+                "Haas F1 Team": "#b6babd",
+                "AlphaTauri": "#2b2d42",
+                "Alfa Romeo": "#900000",
+
+            };
+            return colors[team] || "#343a40";
+        }
+
+        fetch('https://api.openf1.org/v1/drivers')
+            .then(response => response.json())
+            .then(drivers => {
+                const sample = drivers.slice(0, 12);
+
+                sample.forEach(driver => {
+                    const col = document.createElement('div');
+                    col.className = 'col-12 col-md-4';
+
+                    const teamColor = getTeamColor(driver.team_name);
+
+                    col.innerHTML = `
+                            <div class="card card-team h-100" style="background-color: ${teamColor};">
+                                <div class="card-body text-light">
+                                    <h5 class="card-title fw-bold mb-2">${driver.full_name}</h5>
+                                    <p class="card-text mb-1">
+                                        <span class="fw-semibold">Team:</span> ${driver.team_name || 'N/A'}
+                                    </p>
+                                    <p class="card-text mb-3">
+                                        <span class="fw-semibold">Number:</span> ${driver.driver_number}
+                                    </p>
+                                    <a href="telemetry.html?driver=${driver.driver_number}"
+                                       class="btn btn-sm btn-light fw-bold">
+                                        View Telemetry
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    driverRow.appendChild(col);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                driverError.textContent =
+                    'Couldn\'t talk to the OpenF1 API right now.'
+                'Did you try turning your internet router off and on again?';
+            });
+    </script>
+</body>
+</html>
